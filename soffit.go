@@ -5,6 +5,7 @@ package soffit // import "astuart.co/soffit-go"
 
 import (
 	"bytes"
+	"log"
 	"net/url"
 
 	"github.com/blang/semver"
@@ -26,17 +27,33 @@ type Request struct {
 
 	Properties  map[string]string `json:"properties"`
 	Preferences url.Values        `json:"preferences"`
+	Attributes  url.Values        `json:"attributes"`
 }
 
 // PortalInfo is the representation of the portal information sent by the uPortal server.
 type PortalInfo struct {
 	Provider string         `json:"provider"`
 	Version  semver.Version `json:"version"`
+	Snapshot bool           `json:"snapshot"`
 }
+
+var snapshotBytes = []byte("-SNAPSHOT")
 
 // UnmarshalJSON implements json.Unmarshaler
 func (p *PortalInfo) UnmarshalJSON(bs []byte) error {
-	bss := bytes.Split(bs, []byte{'\n'})
+	if len(bs) < 2 {
+		return nil
+	}
+
+	// Reslice, removing quotations from ends
+	if bs[0] == '"' {
+		bs = bs[1:]
+	}
+	if bs[len(bs)-1] == '"' {
+		bs = bs[:len(bs)-1]
+	}
+
+	bss := bytes.Split(bs, []byte{'/'})
 
 	if len(bss) == 0 {
 		return nil
@@ -48,8 +65,17 @@ func (p *PortalInfo) UnmarshalJSON(bs []byte) error {
 		return nil
 	}
 
+	sv := bss[1]
+
+	if bytes.Contains(sv, snapshotBytes) {
+		p.Snapshot = true
+		sv = bytes.Replace(sv, snapshotBytes, []byte{}, -1)
+	}
+
+	log.Println(string(sv))
+
 	var err error
-	p.Version, err = semver.Parse(string(bss[1]))
+	p.Version, err = semver.Parse(string(sv))
 	return err
 }
 
@@ -63,7 +89,7 @@ type UserDetails struct {
 
 // Context represents information about the portal creating the request
 type Context struct {
-	PortalInfo            string     `json:"portalInfo"`
+	PortalInfo            PortalInfo `json:"portalInfo"`
 	SupportedWindowStates []string   `json:"supportedWindowStates"`
 	Attributes            url.Values `json:"attributes"`
 }
