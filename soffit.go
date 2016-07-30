@@ -1,7 +1,7 @@
 // Package soffit provides data structures for the data types one can expect
 // from the uPortal Soffit portlet. This should help enable more rapid
 // iteration when working in a soffit environment.
-package soffit
+package soffit // import "astuart.co/soffit-go"
 
 import (
 	"bytes"
