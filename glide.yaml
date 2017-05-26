@@ -1,0 +1,8 @@
+package: astuart.co/soffit-go
+import:
+- package: github.com/blang/semver
+- package: github.com/dgrijalva/jwt-go
+testImport:
+- package: github.com/stretchr/testify
+  subpackages:
+  - require
