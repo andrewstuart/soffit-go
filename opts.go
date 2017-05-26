@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 
+	jasypt "astuart.co/go-jasypt"
+
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -18,14 +20,14 @@ type Headers struct {
 	Request     map[string]interface{} `json:"request"`
 }
 
-// Decryptor , given a password, provides utilities for handling incoming Soffit
+// Receiver takes a password, provides utilities for handling incoming Soffit
 // requests.
-type Decryptor struct {
+type Receiver struct {
 	Password string
 }
 
 // GetHeaders takes url.Values and returns the decrypted headers.
-func (d Decryptor) GetHeaders(h http.Header) (*Headers, error) {
+func (d Receiver) GetHeaders(h http.Header) (*Headers, error) {
 	var s Headers
 
 	for k := range h {
@@ -37,12 +39,12 @@ func (d Decryptor) GetHeaders(h http.Header) (*Headers, error) {
 		if err != nil {
 			return nil, err
 		}
-		dec, err := DecryptJasypt(bs, d.Password)
+		err = jasypt.DecryptJasypt(bs, d.Password)
 		if err != nil {
 			return nil, err
 		}
 
-		token, err := jwt.Parse(string(dec), nil)
+		token, err := jwt.Parse(string(bs), nil)
 
 		if err != nil && !strings.Contains(err.Error(), "Keyfunc") {
 			return nil, err
